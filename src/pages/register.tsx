@@ -21,7 +21,35 @@ export default function Register() {
 
     const handleRegistration = async (e: React.FormEvent) => {
         e.preventDefault()
+
         setLoading(true)
+        setError(null)
+
+        const registrationResponse = await supabase.auth.signUp({
+            email: email,
+            password: password,
+        })
+
+        if (registrationResponse.error) {
+            setLoading(false)
+            setError(registrationResponse.error.message)
+            console.log(registrationResponse.error)
+            return
+        }
+
+        const loginResponse = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        })
+
+        if (loginResponse.error) {
+            setLoading(false)
+            setError(loginResponse.error.message)
+            console.log(loginResponse.error)
+            return
+        }
+
+        push("/dashboard")
     }
 
     const handleEmailInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,7 +61,6 @@ export default function Register() {
         const value = event.target.value
         setPassword(value)
     }
-
 
     const checkSession = async () => {
         const { data: { user } } = await supabase.auth.getUser()

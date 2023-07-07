@@ -1,18 +1,19 @@
-// Core
-import { useState } from "react"
 import Head from "next/head"
 import Link from "next/link"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/router"
 
-// Utilities
 import { cn } from "@/lib/utils"
+import { supabase } from "@/lib/utils"
 
-// Components
 import { buttonVariants } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Icons } from "@/components/ui/icons"
 
 export default function Login() {
+    const { push } = useRouter()
+
     const [email, setEmail] = useState<string>("")
     const [password, setPassword] = useState<string>("")
     const [loading, setLoading] = useState<boolean>(false)
@@ -22,8 +23,30 @@ export default function Login() {
         e.preventDefault()
 
         setLoading(true)
+        setError(null)
 
+        const loginResponse = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        })
+
+        if (loginResponse.error) {
+            setLoading(false)
+            setError(loginResponse.error.message)
+            console.log(loginResponse.error)
+            return
+        }
+
+        push("/dashboard")
     }
+
+    const checkSession = async () => {
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (user) { push("/dashboard") }
+    }
+
+    useEffect(() => { checkSession() }, [])
 
     return (
         <>
